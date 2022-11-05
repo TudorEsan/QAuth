@@ -10,8 +10,8 @@ func InitRoomRoutes(r *gin.RouterGroup, c *controllers.RoomController) {
 	r.GET("room/ws", c.ConnectRoom())
 
 	r.Use(middlewares.VerifyAuth())
-	r.POST("/room", c.AddRoomHandler())
-	r.GET("/rooms", c.GetRooms())
-	r.DELETE("/room/:id", c.DeleteRoomHandler())
-	r.GET("/room/:id", c.OpenRoom())
+	r.POST("room", c.AddRoomHandler())
+	r.GET("rooms", c.GetRooms())
+	r.DELETE("room/:id", c.DeleteRoomHandler())
+	r.GET("room/:id", c.OpenRoom())
 }

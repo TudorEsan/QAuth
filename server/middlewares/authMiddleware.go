@@ -13,6 +13,7 @@ func RemoveCookies(c *gin.Context) {
 	c.SetCookie("token", "", 60*60*24*30, "", "", false, false)
 	c.SetCookie("refreshToken", "", 60*60*24*30, "", "", false, false)
 }
+
 var l = hclog.Default()
 
 func VerifyAuth() gin.HandlerFunc {
@@ -22,10 +23,10 @@ func VerifyAuth() gin.HandlerFunc {
 		token, err := c.Cookie("token")
 		if err != nil {
 			l.Error("Could not get token", err)
-			c.JSON(http.StatusUnauthorized, gin.H{"message": "Token Not Found"})
 			if tokenH := c.GetHeader("token"); tokenH != "" {
 				token = tokenH
 			} else {
+				c.JSON(http.StatusUnauthorized, gin.H{"message": "Token Not Found"})
 				l.Info("get headers", "headers", c.Request.Header)
 				RemoveCookies(c)
 				c.Abort()

@@ -215,13 +215,30 @@ func (controller RoomController) wshandler(w http.ResponseWriter, r *http.Reques
 	}
 	controller.l.Info("Room connected", "id", id)
 	controller.roomsConnected[id] = conn
-	ticker := time.NewTicker(time.Second * 5)
-	for range ticker.C {
-		conn.WriteJSON("tzancckka")
+	keepAlive(conn, time.Minute * 2)
+
+}
+
+func keepAlive(c *websocket.Conn, timeout time.Duration) {
+	lastResponse := time.Now()
+	c.SetPongHandler(func(msg string) error {
+		 lastResponse = time.Now()
+		 return nil
+ })
+
+ go func() {
+	 for {
+			err := c.WriteMessage(websocket.PingMessage, []byte("keepalive"))
+			if err != nil {
+					return 
+			}   
+			time.Sleep(timeout/2)
+			if(time.Since(lastResponse) > timeout) {
+					c.Close()
+					return
+			}
 	}
-
-	// helpers.GetGetActiveReservation(controller.rese)
-
+}()
 }
 
 func (controller *RoomController) ConnectRoom() gin.HandlerFunc {

@@ -17,3 +17,5 @@ admin/node_modules
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+admin/src/pages/Accounts.tsx
+.DS_Store

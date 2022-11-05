@@ -7,9 +7,9 @@ import (
 )
 
 func InitUserRoutes(r *gin.RouterGroup, c *controllers.UserController) {
-	r.POST("/login", c.LoginHandler())
-	r.POST("/register", c.SignupHandler())
+	r.POST("login", c.LoginHandler())
+	r.POST("register", c.SignupHandler())
 	r.Use(middlewares.VerifyAuth())
-	r.GET("/users", c.GetUsers())
+	r.GET("users", c.GetUsers())
 	// r.POST("/logout", c.Logout)
 }

@@ -1,24 +1,54 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+// @ts-nocheck
+import { createTheme, CssBaseline, ThemeProvider } from "@mui/material";
+import React from "react";
+import { AuthContext, AuthProvider } from "./context/AuthProvider";
+import { AppRoutes } from "./router/Routes";
+import "./index.css";
+import "./axiosConfig";
 
 function App() {
+  const { palette } = createTheme();
+  const theme = createTheme({
+    palette: {
+      background: {
+        default: "#inherit",
+      },
+      mode: "dark",
+      primary: {
+        main: "#17C6B1",
+      },
+      secondary: {
+        main: "#72E8C9",
+      },
+      mycolor: { main: "red" },
+    },
+    components: {
+      MuiButton: {
+        styleOverrides: {
+          root: {
+            // borderRadius: "1000px",
+          },
+        },
+      },
+      MuiCard: {
+        styleOverrides: {
+          root: {
+            backgroundImage: 'none',
+            backgroundColor: "#161616",
+            borderRadius: "20px",
+          },
+        },
+      },
+    },
+  });
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <AuthProvider>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <AppRoutes />
+        </ThemeProvider>
+      </AuthProvider>
     </div>
   );
 }
