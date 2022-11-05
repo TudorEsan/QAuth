@@ -25,7 +25,6 @@ func NewUserController(l hclog.Logger, mongoClient *mongo.Client) *UserControlle
 }
 
 func (controller *UserController) SignupHandler() gin.HandlerFunc {
-
 	return func(c *gin.Context) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
 		defer cancel()
@@ -72,6 +71,31 @@ func (controller *UserController) SignupHandler() gin.HandlerFunc {
 
 }
 
+func (controller *UserController) GetUsers() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
+		defer cancel()
+		var users []models.UserReturn
+		cursor, err := controller.userCollection.Find(ctx, bson.M{})
+		if err != nil {
+			controller.l.Error("Could not get users", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+			return
+		}
+		defer cursor.Close(ctx)
+
+		for cursor.Next(ctx) {
+			var user models.User
+			cursor.Decode(&user)
+			controller.l.Info("email", c.MustGet("claims").(*models.SignedDetails).Email)
+			if user.Email != c.MustGet("claims").(*models.SignedDetails).Email {
+				users = append(users, models.NewUserReturn(user))
+			}
+		}
+		c.JSON(http.StatusOK, gin.H{"users": users})
+	}
+}
+
 func (controller *UserController) LoginHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*20)
@@ -105,7 +129,7 @@ func (controller *UserController) LoginHandler() gin.HandlerFunc {
 		}
 
 		helpers.SetCookies(c, jwt, refreshToken)
-		c.JSON(http.StatusOK, foundUser)
+		c.JSON(http.StatusOK, gin.H{"user": foundUser, "token": jwt, "refreshToken": refreshToken})
 	}
 }
 

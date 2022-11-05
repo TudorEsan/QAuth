@@ -10,14 +10,17 @@ import (
 	"github.com/TudorEsan/QPerior-Hackhaton/models"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func GenerateTokens(user models.User) (string, string, error) {
 	conf := config.New()
+
 	claims := &models.SignedDetails{
 		Username: user.Name,
 		Id:       user.ID.Hex(),
 		Role:     user.Role,
+		Email:    user.Email,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Local().Add(time.Minute * 60 * 24 * 30).Unix(),
 		},
@@ -70,4 +73,15 @@ func ValidateRole(c *gin.Context, desiredRole int) error {
 		return errors.New("unauthorized")
 	}
 	return nil
+}
+
+func GetUserId(c *gin.Context) primitive.ObjectID {
+	claims := c.MustGet("claims").(*models.SignedDetails)
+	id, _ := primitive.ObjectIDFromHex(claims.Id)
+	return id
+}
+
+func GetUserRole(c *gin.Context) int {
+	claims := c.MustGet("claims").(*models.SignedDetails)
+	return claims.Role
 }

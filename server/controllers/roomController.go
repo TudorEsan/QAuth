@@ -18,17 +18,27 @@ import (
 )
 
 type RoomController struct {
-	l              hclog.Logger
-	userCollection *mongo.Collection
-	roomCollection *mongo.Collection
-	roomsConnected map[string]*websocket.Conn
+	l                      hclog.Logger
+	userCollection         *mongo.Collection
+	roomCollection         *mongo.Collection
+	reservationsCollection *mongo.Collection
+	roomsConnected         map[string]*websocket.Conn
 }
 
 func NewRoomController(l hclog.Logger, mongoClient *mongo.Client) *RoomController {
 	userCollection := database.OpenCollection(mongoClient, "users")
 	roomCollection := database.OpenCollection(mongoClient, "rooms")
+	reservationCollection := database.OpenCollection(mongoClient, "reservations")
 	roomsConnected := make(map[string]*websocket.Conn)
-	return &RoomController{l, userCollection, roomCollection, roomsConnected}
+	return &RoomController{l, userCollection, roomCollection, reservationCollection, roomsConnected}
+}
+
+func OpenRoom(conn *websocket.Conn) {
+	conn.WriteJSON(gin.H{"message": "open"}) 
+}
+
+func CloseRoom(conn *websocket.Conn) {
+	conn.WriteJSON(gin.H{"message": "unauthorized"})
 }
 
 func (controller *RoomController) OpenRoom() gin.HandlerFunc {
@@ -44,7 +54,6 @@ func (controller *RoomController) OpenRoom() gin.HandlerFunc {
 
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
 		defer cancel()
-
 		var room models.Room
 		err = controller.roomCollection.FindOne(ctx, bson.M{"_id": id}).Decode(&room)
 		if err != nil {
@@ -52,20 +61,49 @@ func (controller *RoomController) OpenRoom() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 			return
 		}
-
-		if conn, ok := controller.roomsConnected[roomId]; ok {
-			conn.WriteJSON(gin.H{
-				"message": "Open",
-			})
-		} else {
-			controller.l.Error("Could not open room", err)
+		conn, ok := controller.roomsConnected[roomId]
+		if !ok {
+			controller.l.Error("Room offline", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"message": "Room offline"})
 			return
 		}
 
-		c.JSON(200, gin.H{"message": "Room opened"})
-	}
+		activeReservation, err := helpers.GetActiveReservation(controller.reservationsCollection, id)
+		if err != nil {
+			controller.l.Error("Could not get active reservation", err)
+			err := helpers.ValidateRole(c, room.MinimalRole)
+			if err != nil {
+				// c.JSON(http.StatusUnauthorized, gin.H{"message": "You are not authorized to open this room"})
+				CloseRoom(conn)
+				return
+			}
+			OpenRoom(conn)
+			c.JSON(200, gin.H{"message": "Room opened"})
+			return
+		}
+		if activeReservation.UserId == helpers.GetUserId(c) {
+			OpenRoom(conn)
+			c.JSON(200, gin.H{"message": "Room opened"})
+			return
+		}
 
+		for _, userId := range activeReservation.Guests {
+			if userId == helpers.GetUserId(c) {
+				OpenRoom(conn)
+				c.JSON(200, gin.H{"message": "Room opened"})
+				return
+			}
+		}
+
+		if helpers.GetUserRole(c) == 0 {
+			OpenRoom(conn)
+			c.JSON(200, gin.H{"message": "Room opened"})
+			return
+		}
+		
+		CloseRoom(conn)
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "You are not authorized to open this room"})
+	}
 }
 
 func (controller *RoomController) AddRoomHandler() gin.HandlerFunc {
@@ -168,12 +206,21 @@ func (controller RoomController) wshandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	id := r.URL.Query().Get("id")
+	if id == "" {
+		fmt.Println("No id")
+		conn.Close()
+		w.WriteHeader(http.StatusBadRequest)
+		// return 400 and close connection
+		return
+	}
 	controller.l.Info("Room connected", "id", id)
 	controller.roomsConnected[id] = conn
 	ticker := time.NewTicker(time.Second * 5)
 	for range ticker.C {
 		conn.WriteJSON("tzancckka")
 	}
+
+	// helpers.GetGetActiveReservation(controller.rese)
 
 }
 

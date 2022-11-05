@@ -2,15 +2,17 @@ package helpers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/TudorEsan/QPerior-Hackhaton/models"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func GetReservationsFromDate(reservationCol *mongo.Collection, year, month, day int) ([]models.Reservation, error) {
+func GetReservationsFromDate(reservationCol *mongo.Collection, year, month, day int, roomId primitive.ObjectID) ([]models.Reservation, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -33,6 +35,7 @@ func GetReservationsFromDate(reservationCol *mongo.Collection, year, month, day 
 						{"year", year},
 						{"month", month},
 						{"day", day},
+						{"roomId", roomId},
 					},
 				},
 			},
@@ -81,4 +84,17 @@ func IsReservationValid(reservation models.Reservation, dayReservations []models
 	}
 	return true
 
+}
+
+func GetActiveReservation(reservationCol *mongo.Collection, roomId primitive.ObjectID) (models.Reservation, error) {
+	reservations, err := GetReservationsFromDate(reservationCol, time.Now().Year(), int(time.Now().Month()), time.Now().Day(), roomId)
+	if err != nil {
+		return models.Reservation{}, err
+	}
+	for _, reservation := range reservations {
+		if reservation.From.Before(time.Now()) && reservation.From.Add(time.Minute*time.Duration(reservation.DurationMinutes)).After(time.Now()) {
+			return reservation, nil
+		}
+	}
+	return models.Reservation{}, errors.New("No active reservation")
 }

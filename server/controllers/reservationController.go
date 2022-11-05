@@ -56,7 +56,7 @@ func (controller *ReservationController) AddReservation() gin.HandlerFunc {
 
 		reservation.Id = primitive.NewObjectID()
 
-		reservationFromThatDay, err := helpers.GetReservationsFromDate(controller.reservationCollection, reservation.From.Year(), int(reservation.From.Month()), reservation.From.Day())
+		reservationFromThatDay, err := helpers.GetReservationsFromDate(controller.reservationCollection, reservation.From.Year(), int(reservation.From.Month()), reservation.From.Day(), reservation.RoomId)
 		if err != nil {
 			controller.l.Error("Could not get reservations from that day", err)
 			c.JSON(400, gin.H{"message": err.Error()})
@@ -115,7 +115,7 @@ func (controller *ReservationController) FilterReservations() gin.HandlerFunc {
 		month, _ = strconv.Atoi(c.Query("month"))
 		year, _ = strconv.Atoi(c.Query("year"))
 
-		reservations, err := helpers.GetReservationsFromDate(controller.reservationCollection, year, month, day)
+		reservations, err := helpers.GetReservationsFromDate(controller.reservationCollection, year, month, day, primitive.NilObjectID)
 		if err != nil {
 			controller.l.Error("Could not get reservations", err)
 			c.JSON(400, gin.H{"message": err.Error()})

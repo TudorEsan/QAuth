@@ -19,6 +19,20 @@ type UserSignupForm struct {
 	Password string `json:"password" binding:"required"`
 }
 
+type UserReturn struct {
+	ID   primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	Name string             `json:"name" bson:"name"`
+	Emai string             `json:"email" bson:"email"`
+}
+
+func NewUserReturn(user User) UserReturn {
+	return UserReturn{
+		ID:   user.ID,
+		Name: user.Name,
+		Emai: user.Email,
+	}
+}
+
 type UserLoginForm struct {
 	Email    string `json:"email" binding:"required"`
 	Password string `json:"password" binding:"required"`
