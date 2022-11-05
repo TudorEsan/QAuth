@@ -1,4 +1,6 @@
 server/.env
+client/node_modules
+admin/node_modules
 
 # Binaries for programs and plugins
 *.exe
