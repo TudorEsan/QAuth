@@ -12,5 +12,6 @@ func InitReservationRoutes(r *gin.RouterGroup, c *controllers.ReservationControl
 	r.GET("/reservation", c.GetUserReservations())
 	r.GET("reservationFilter", c.FilterReservations())
 	r.POST("/reservation/:from", c.AddReservation())
+	r.DELETE("/reservation/:id", c.DeleteReservation())
 	// r.DELETE("/reservation/:id", c.DeleteReservation())
 }

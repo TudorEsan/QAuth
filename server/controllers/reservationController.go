@@ -163,3 +163,25 @@ func (controller *ReservationController) GetUserReservations() gin.HandlerFunc {
 		c.JSON(200, reservation)
 	}
 }
+
+func (controller *ReservationController) DeleteReservation() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		idS := c.Param("id")
+		id, err := primitive.ObjectIDFromHex(idS)
+		if err != nil {
+			c.JSON(400, gin.H{"message": err.Error()})
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
+		defer cancel()
+
+		_, err = controller.reservationCollection.DeleteOne(ctx, bson.M{"_id": id})
+		if err != nil {
+			c.JSON(400, gin.H{"message": err.Error()})
+			return
+		}
+
+		c.JSON(200, gin.H{"message": "Reservation deleted"})
+	}
+}

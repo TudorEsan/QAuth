@@ -20,6 +20,7 @@ import {
   AccountTreeSharp,
   CalendarMonth,
   Dashboard,
+  Room,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
@@ -66,9 +67,17 @@ export default function ResponsiveDrawer(props: Props) {
         <ListItem disablePadding>
           <ListItemButton onClick={() => navigate("/rooms")}>
             <ListItemIcon sx={{ ml: 2 }}>
-              <CalendarMonth />
+              <Room />
             </ListItemIcon>
             <ListItemText primary="Rooms" />
+          </ListItemButton>
+        </ListItem>
+        <ListItem disablePadding>
+          <ListItemButton onClick={() => navigate("/reservations")}>
+            <ListItemIcon sx={{ ml: 2 }}>
+              <CalendarMonth />
+            </ListItemIcon>
+            <ListItemText primary="Reservations" />
           </ListItemButton>
         </ListItem>
       </List>

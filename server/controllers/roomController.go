@@ -214,7 +214,7 @@ func (controller RoomController) wshandler(w http.ResponseWriter, r *http.Reques
 	}
 	controller.l.Info("Room connected", "id", id)
 	controller.roomsConnected[id] = conn
-	keepAlive(conn, time.Minute * 2)
+	keepAlive(conn, time.Hour * 24)
 
 }
 

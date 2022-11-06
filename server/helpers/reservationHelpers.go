@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/TudorEsan/QPerior-Hackhaton/models"
+	"github.com/hashicorp/go-hclog"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -87,12 +88,27 @@ func IsReservationValid(reservation models.Reservation, dayReservations []models
 }
 
 func GetActiveReservation(reservationCol *mongo.Collection, roomId primitive.ObjectID) (models.Reservation, error) {
-	reservations, err := GetReservationsFromDate(reservationCol, time.Now().Year(), int(time.Now().Month()), time.Now().Day(), roomId)
+	l := hclog.Default()
+	l.Info("ID", "roomId", roomId)
+	currentYear := time.Now().Year()
+	currentMonth := int(time.Now().Month())
+	currentDay := time.Now().Day()
+	l.Info("date", "year", currentYear, "month", currentMonth, "day", currentDay)
+
+	reservations, err := GetReservationsFromDate(reservationCol, currentYear, currentMonth, currentDay, roomId)
 	if err != nil {
 		return models.Reservation{}, err
 	}
+	l.Info("RES", "reservations", reservations)
+	now := time.Now().UTC().Add(time.Hour * 2)
 	for _, reservation := range reservations {
-		if reservation.From.Before(time.Now()) && reservation.From.Add(time.Minute*time.Duration(reservation.DurationMinutes)).After(time.Now()) {
+		l.Info("CHECK", "RES STARTS AT", reservation.From)
+		l.Info("CHECK", "NOW", now)
+		l.Info("CHECK", "res before current time", reservation.From.Before(now))
+		resEndsAt := reservation.From.Add(time.Minute*time.Duration(reservation.DurationMinutes)) 
+		l.Info("CHECK", "res ends at", reservation.From.Add(time.Minute*time.Duration(reservation.DurationMinutes)))
+
+		if reservation.From.Before(now) && resEndsAt.After(now) {
 			return reservation, nil
 		}
 	}

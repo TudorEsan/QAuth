@@ -40,6 +40,7 @@ const RoomsDataGrid = ({ open }: { open: boolean }) => {
   };
 
   const columns = [
+    { field: "id", headerName: "Id", flex: 1 },
     { field: "name", headerName: "Name", flex: 1 },
     { field: "minimalRole", headerName: "Minimum Role", flex: 1 },
     {
