@@ -137,7 +137,7 @@ func (controller *ReservationController) FilterReservations() gin.HandlerFunc {
 	}
 }
 
-func (controller *ReservationController) GetUserReservations() gin.HandlerFunc {
+func (controller *ReservationController) GetAllReservations() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
 		defer cancel()
@@ -183,5 +183,37 @@ func (controller *ReservationController) DeleteReservation() gin.HandlerFunc {
 		}
 
 		c.JSON(200, gin.H{"message": "Reservation deleted"})
+	}
+}
+
+func (controller *ReservationController) GetUserReservations() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
+		defer cancel()
+
+		claims := c.MustGet("claims").(*models.SignedDetails)
+		idS := claims.Id
+
+		userId, err := primitive.ObjectIDFromHex(idS)
+		if err != nil {
+			controller.l.Error("Could not get user id", err)
+			c.JSON(400, gin.H{"message": err.Error()})
+			return
+		}
+
+		var reservations []models.Reservation
+		cursor, err := controller.reservationCollection.Find(ctx, bson.M{"userId": userId})
+		if err != nil {
+			controller.l.Error("Could not get reservation", err)
+			c.JSON(400, gin.H{"message": err.Error()})
+			return
+		}
+		for cursor.Next(ctx) {
+			var reservation models.Reservation
+			cursor.Decode(&reservation)
+			reservations = append(reservations, reservation)
+		}
+
+		c.JSON(200, reservations)
 	}
 }

@@ -16,12 +16,11 @@ func main() {
 	l := hclog.Default()
 	router := gin.Default()
 
-
 	// disable cors
 	config := cors.DefaultConfig()
 	config.AllowCredentials = true
 	config.AllowHeaders = []string{"Content-Type", "Authorization", "Origin", "Accept", "Access-Control-Allow-Origin", "token"}
-	config.AllowOrigins = []string{"http://localhost:3000"}
+	config.AllowOrigins = []string{"http://localhost:3000", "http://financeapp.tudoresan.ro:3000/"}
 	config.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"}
 	// config.AllowOrigins = []string{"*"}
 
@@ -34,7 +33,6 @@ func main() {
 			"message": "pong",
 		})
 	})
-
 
 	userController := controllers.NewUserController(l, mongoClient)
 	roomsController := controllers.NewRoomController(l, mongoClient)
