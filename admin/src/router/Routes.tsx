@@ -4,6 +4,7 @@ import { Login } from "../pages";
 import { Accounts } from "../pages/Accounts";
 import { Home } from "../pages/Home";
 import { Register } from "../pages/Register";
+import { Rooms } from "../pages/Rooms";
 import { ProtectedRoute } from "./ProtectedRoute";
 
 export const AppRoutes = () => {
@@ -24,6 +25,14 @@ export const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <Accounts />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/rooms"
+        element={
+          <ProtectedRoute>
+            <Rooms />
           </ProtectedRoute>
         }
       />

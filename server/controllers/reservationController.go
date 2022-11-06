@@ -33,10 +33,20 @@ func (controller *ReservationController) AddReservation() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var reservationForm models.ReservationForm
 		if err := c.Bind(&reservationForm); err != nil {
-			controller.l.Error("Could not bind reservation", err)
+			controller.l.Error("Could not bind reservation", "error", err)
 			c.JSON(400, gin.H{"message": err.Error()})
 			return
 		}
+
+		from := c.Param("from")
+		controller.l.Info("PARSING", "FROM", from)
+		fromDate, err := time.Parse("2006-01-02T15:04:05", from)
+		if err != nil {
+			controller.l.Error("Parsing", "error", err)
+			c.JSON(400, gin.H{"message": err.Error()})
+			return
+		}
+		reservationForm.From = fromDate
 
 		reservation := models.NewReservation(reservationForm)
 		userId, _ := primitive.ObjectIDFromHex(c.MustGet("claims").(*models.SignedDetails).Id)
@@ -47,7 +57,7 @@ func (controller *ReservationController) AddReservation() gin.HandlerFunc {
 		defer cancel()
 
 		var room models.Room
-		err := controller.roomsCollection.FindOne(ctx, bson.M{"_id": reservation.RoomId}).Decode(&room)
+		err = controller.roomsCollection.FindOne(ctx, bson.M{"_id": reservation.RoomId}).Decode(&room)
 		if err != nil {
 			controller.l.Error("Could not get room", err)
 			c.JSON(400, gin.H{"message": err.Error()})
@@ -89,6 +99,7 @@ func (controller *ReservationController) GetReservations() gin.HandlerFunc {
 		defer cancel()
 
 		var reservations []models.Reservation
+		reservations = make([]models.Reservation, 0)
 		cursor, err := controller.reservationCollection.Find(ctx, bson.M{})
 		if err != nil {
 			controller.l.Error("Could not get reservations", err)

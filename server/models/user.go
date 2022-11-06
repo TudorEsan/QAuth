@@ -17,12 +17,14 @@ type UserSignupForm struct {
 	Name     string `json:"name" binding:"required"`
 	Email    string `json:"email" binding:"required"`
 	Password string `json:"password" binding:"required"`
+	Role     int    `json:"role" binding:"required"`
 }
 
 type UserReturn struct {
 	ID   primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	Name string             `json:"name" bson:"name"`
 	Emai string             `json:"email" bson:"email"`
+	Role int                `json:"role" bson:"role"`
 }
 
 func NewUserReturn(user User) UserReturn {
@@ -30,6 +32,7 @@ func NewUserReturn(user User) UserReturn {
 		ID:   user.ID,
 		Name: user.Name,
 		Emai: user.Email,
+		Role: user.Role,
 	}
 }
 
@@ -49,6 +52,6 @@ func NewUser(user UserSignupForm) User {
 		Name:      user.Name,
 		Email:     user.Email,
 		HashedPwd: hashedPwd,
-		Role:      10000,
+		Role:      user.Role,
 	}
 }

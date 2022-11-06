@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/hashicorp/go-hclog"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -24,6 +25,38 @@ func NewUserController(l hclog.Logger, mongoClient *mongo.Client) *UserControlle
 	return &UserController{l, userCollection}
 }
 
+func (controller *UserController) DeleteUser() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		idS := c.Param("id")
+		if idS == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
+			return
+		}
+		id, err := primitive.ObjectIDFromHex(idS)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+			return
+		}
+
+		err = helpers.ValidateRole(c, 0)
+		if err != nil {
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
+		defer cancel()
+		_, err = controller.userCollection.DeleteOne(ctx, bson.M{"_id": id})
+		if err != nil {
+			controller.l.Error("Could not delete user", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "User deleted"})
+
+	}
+}
+
 func (controller *UserController) SignupHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
@@ -35,8 +68,13 @@ func (controller *UserController) SignupHandler() gin.HandlerFunc {
 			return
 		}
 
+		err := helpers.ValidateRole(c, 0)
+		if err != nil {
+			return
+		}
+
 		// check if username is not present in the database
-		err := helpers.ValidEmail(ctx, controller.userCollection, user.Email)
+		err = helpers.ValidEmail(ctx, controller.userCollection, user.Email)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 			return
@@ -55,17 +93,8 @@ func (controller *UserController) SignupHandler() gin.HandlerFunc {
 			return
 		}
 
-		// generate all the auth tokens
-		jwt, refreshToken, err := helpers.GenerateTokens(userForDb)
-		if err != nil {
-			controller.l.Error("Could not generate tokens", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
-			return
-		}
-
 		c.JSON(http.StatusOK, gin.H{
-			"jwt":          jwt,
-			"refreshToken": refreshToken,
+			"ok": "hehe",
 		})
 	}
 
@@ -92,7 +121,7 @@ func (controller *UserController) GetUsers() gin.HandlerFunc {
 				users = append(users, models.NewUserReturn(user))
 			}
 		}
-		c.JSON(http.StatusOK, gin.H{"users": users})
+		c.JSON(http.StatusOK, users)
 	}
 }
 

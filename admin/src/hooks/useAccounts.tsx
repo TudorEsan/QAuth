@@ -11,23 +11,26 @@ export const useAccounts = () => {
     error: null,
   });
 
-
   const initAccounts = async () => {
     try {
       const users = await getUsers();
-      console.log(users)
+      console.log(users);
       handleSuccess(users, setAccounts);
     } catch (e) {
       handleError(setAccounts, "Could not load accounts");
     }
   };
 
+  const refresh = () => {
+    initAccounts();
+  };
+
   useEffect(() => {
     initAccounts();
-  }, [])
+  }, []);
 
   return {
-    accounts
-  }
-
+    accounts,
+    refresh,
+  };
 };

@@ -50,7 +50,7 @@ export default function ResponsiveDrawer(props: Props) {
       <Toolbar sx={{ display: "flex", justifyContent: "center", gap: 2 }}>
         <TimelineIcon />
         <Typography variant="h6" noWrap>
-          Finance App{" "}
+          Admin{" "}
         </Typography>
       </Toolbar>
       <Divider />
@@ -61,14 +61,14 @@ export default function ResponsiveDrawer(props: Props) {
               <AccountTreeSharp />
             </ListItemIcon>
             <ListItemText primary="Accounts" />
-          </ListItemButton>
+        </ListItemButton>
         </ListItem>
         <ListItem disablePadding>
           <ListItemButton onClick={() => navigate("/rooms")}>
             <ListItemIcon sx={{ ml: 2 }}>
               <CalendarMonth />
             </ListItemIcon>
-            <ListItemText primary="rooms" />
+            <ListItemText primary="Rooms" />
           </ListItemButton>
         </ListItem>
       </List>

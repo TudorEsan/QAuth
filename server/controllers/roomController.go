@@ -169,7 +169,6 @@ func (controller *RoomController) DeleteRoomHandler() gin.HandlerFunc {
 
 func (controller *RoomController) GetRooms() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		helpers.ValidateRole(c, 0)
 
 		// get rooms from the db
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
